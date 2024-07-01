@@ -153,14 +153,14 @@ export const generateRunbook = (secrets: vscode.SecretStorage) => vscode.window.
         });
 
         progress.report({ increment: 5, message: `Streaming ${model}` });
-
+        const doc = editor.document;
         for await (const chunk of completionStream) {
-            await editor.edit((edit) => {
-                edit.insert(
-                    new vscode.Position(editor.document.lineCount, 0),
-                    chunk.choices[0].delta.content || ""
-                );
-            });
+            const edit = new vscode.WorkspaceEdit();
+            const text = chunk.choices[0].delta.content || '';
+            edit.insert(
+                doc.uri,
+                new vscode.Position(doc.lineCount, 0), text);
+            await vscode.workspace.applyEdit(edit);
         }
 
         await doc.save();
